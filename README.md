@@ -1,5 +1,7 @@
 # code-edit-agent-amp
 
+Following <https:/>/ampcode.com/how-to-build-an-agent>
+
 ## Running
 
 ```bash

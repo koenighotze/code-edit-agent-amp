@@ -3,13 +3,21 @@ package main
 import (
 	"bufio"
 	"context"
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/anthropics/anthropic-sdk-go"
 )
 
 func main() {
+	logFile, err := os.OpenFile("agent.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal("Failed to open log file:", err)
+	}
+	defer logFile.Close()
+	log.SetOutput(logFile)
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	log.Println("Starting anthropic agent poc")
 	client := anthropic.NewClient()
 
 	scanner := bufio.NewScanner(os.Stdin)
@@ -21,65 +29,19 @@ func main() {
 		return scanner.Text(), true
 	}
 
-	agent := NewAgent(&client, getUserMessage)
+	tools := []ToolDefinition{ReadFileDefinition}
+	agent := NewAgent(&client, getUserMessage, tools)
 
-	err := agent.Run(context.TODO())
-
+	err = agent.Run(context.TODO())
 	if err != nil {
 		panic(err)
 	}
 }
 
-func NewAgent(client *anthropic.Client, getUserMessage func() (string, bool)) *Agent {
+func NewAgent(client *anthropic.Client, getUserMessage func() (string, bool), tools []ToolDefinition) *Agent {
 	return &Agent{
 		client:         client,
 		getUserMessage: getUserMessage,
+		tools:          tools,
 	}
-}
-
-type Agent struct {
-	client         *anthropic.Client
-	getUserMessage func() (string, bool)
-}
-
-func (a *Agent) Run(ctx context.Context) error {
-	conversation := []anthropic.MessageParam{}
-
-	fmt.Println("Chat with claude. Ctrl c quits")
-
-	for {
-		fmt.Print("\u001b[94mYou\u001b[0m: ")
-		input, ok := a.getUserMessage()
-		if !ok {
-			fmt.Println("Good Bye!")
-			break
-		}
-
-		userMessage := anthropic.NewUserMessage(anthropic.NewTextBlock(input))
-		conversation = append(conversation, userMessage)
-
-		message, err := a.runInference(ctx, conversation)
-		if err != nil {
-			return err
-		}
-
-		conversation = append(conversation, message.ToParam())
-
-		for _, content := range message.Content {
-			switch content.Type {
-			case "text":
-				fmt.Printf("\u001b[93mClaude\u001b[0m: %s\n", content.Text)
-			}
-		}
-	}
-
-	return nil
-}
-
-func (a *Agent) runInference(ctx context.Context, conversation []anthropic.MessageParam) (*anthropic.Message, error) {
-	return a.client.Messages.New(ctx, anthropic.MessageNewParams{
-		Model:     anthropic.ModelClaude3_5Haiku20241022,
-		MaxTokens: int64(1024),
-		Messages:  conversation,
-	})
 }

@@ -9,10 +9,10 @@ clean:
 	go clean -x -i
 
 fmt:
-	go fmt ./cmd/... ./internal/... ./pkg/...
+	go fmt .
 
 vet: fmt
-	go vet ./cmd/... ./internal/... ./pkg/...
+	go vet .
 
 lint:
 	golangci-lint run ./...

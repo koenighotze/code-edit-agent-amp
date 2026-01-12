@@ -29,7 +29,7 @@ func main() {
 		return scanner.Text(), true
 	}
 
-	tools := []ToolDefinition{ReadFileDefinition, ListFilesDefinition}
+	tools := []ToolDefinition{EditFileDefinition, ReadFileDefinition, ListFilesDefinition}
 	agent := NewAgent(&client, getUserMessage, tools)
 
 	err = agent.Run(context.TODO())

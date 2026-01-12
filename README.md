@@ -6,7 +6,8 @@ Following <https://ampcode.com/how-to-build-an-agent>
 
 ```bash
 make build
-. ~/bin/set-anthropic-api-key
+# or whatever works for you...as long as you set the API key.
+export ANTHROPIC_API_KEY=$(op read op://kh-development/mrq3jdrkmteovz4rq2drrdjoky/API-KEY)
 ./code-edit-agent-amp
 ```
 
